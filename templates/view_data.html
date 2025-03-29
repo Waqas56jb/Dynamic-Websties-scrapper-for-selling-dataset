@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        background-color: #1a1a2e;
+        color: #fff;
+        font-family: "Poppins", sans-serif;
+      }
+
+      .chart-container {
+        background: #2a2a3c;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
+        margin-bottom: 20px;
+        height: 320px; /* Increased height to avoid overlap */
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .chart-title {
+        text-align: center;
+        font-size: 1.4rem;
+        margin-bottom: 10px;
+        color: #ffbb33;
+      }
+
+      .chart-container canvas {
+        position: relative;
+        top: -10px; /* Brings the chart a bit above */
+      }
+
+      .form-container {
+        background: #2a2a3c;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
+        margin-top: 40px;
+        border: 1px solid #ffbb33;
+      }
+
+      .form-container h2 {
+        color: #ffbb33;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        color: #fff;
+      }
+
+      .form-group input,
+      .form-group textarea {
+        background: #333;
+        color: #fff;
+        border: 1px solid #444;
+        border-radius: 8px;
+      }
+
+      .form-group input:focus,
+      .form-group textarea:focus {
+        border-color: #ffbb33;
+        outline: none;
+      }
+
+      .btn {
+        background-color: #ffbb33;
+        color: #1a1a2e;
+        border: none;
+        border-radius: 8px;
+        width: 100%;
+        font-size: 1.1rem;
+      }
+
+      .btn:hover {
+        background-color: #e6a800;
+      }
+
+      @media (max-width: 768px) {
+        .chart-container {
+          height: 280px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container-fluid">
+      <h1 class="text-center my-4" style="color: #ffbb33">Dashboard</h1>
+
+      <!-- Charts Section -->
+      <div class="row">
+        <div class="col-md-4">
+          <div class="chart-container">
+            <div class="chart-title">Email Status</div>
+            <canvas id="emailStatusChart"></canvas>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="chart-container">
+            <div class="chart-title">Daily Email Count</div>
+            <canvas id="dailyEmailChart"></canvas>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="chart-container">
+            <div class="chart-title">Feature Counts</div>
+            <canvas id="featureCountChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bulk Email Sender Form -->
+      <div class="row mt-4">
+        <div class="col-md-8 offset-md-2">
+          <div class="form-container">
+            <h2>Send Bulk Emails</h2>
+            <div class="form-group">
+              <label>Recipients (comma-separated)</label>
+              <input type="text" id="recipients" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label>CC</label>
+              <input type="text" id="cc" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label>BCC</label>
+              <input type="text" id="bcc" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label>Subject</label>
+              <input type="text" id="subject" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label>Message</label>
+              <textarea id="body" rows="5" class="form-control"></textarea>
+            </div>
+            <button class="btn" onclick="sendEmails()">Send Emails</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      fetch("/get_email_stats")
+        .then((response) => response.json())
+        .then((data) => {
+          const statusCtx = document
+            .getElementById("emailStatusChart")
+            .getContext("2d");
+          new Chart(statusCtx, {
+            type: "doughnut",
+            data: {
+              labels: data.status_counts.map((item) => item.status),
+              datasets: [
+                {
+                  data: data.status_counts.map((item) => item.count),
+                  backgroundColor: ["#ffbb33", "#36A2EB", "#FF6384"],
+                },
+              ],
+            },
+            options: { responsive: true, maintainAspectRatio: false },
+          });
+
+          const dailyCtx = document
+            .getElementById("dailyEmailChart")
+            .getContext("2d");
+          new Chart(dailyCtx, {
+            type: "bar",
+            data: {
+              labels: data.daily_counts.map((item) => item.date),
+              datasets: [
+                {
+                  data: data.daily_counts.map((item) => item.count),
+                  backgroundColor: "#36A2EB",
+                },
+              ],
+            },
+            options: { responsive: true, maintainAspectRatio: false },
+          });
+
+          const featureCtx = document
+            .getElementById("featureCountChart")
+            .getContext("2d");
+          new Chart(featureCtx, {
+            type: "doughnut",
+            data: {
+              labels: Object.keys(data.feature_counts),
+              datasets: [
+                {
+                  data: Object.values(data.feature_counts),
+                  backgroundColor: ["#ffbb33", "#36A2EB", "#FF6384", "#4BC0C0"],
+                },
+              ],
+            },
+            options: { responsive: true, maintainAspectRatio: false },
+          });
+        });
+
+      function sendEmails() {
+        const recipients = document
+          .getElementById("recipients")
+          .value.split(",")
+          .map((email) => email.trim());
+        const cc = document
+          .getElementById("cc")
+          .value.split(",")
+          .map((email) => email.trim());
+        const bcc = document
+          .getElementById("bcc")
+          .value.split(",")
+          .map((email) => email.trim());
+        const subject = document.getElementById("subject").value;
+        const body = document.getElementById("body").value;
+
+        fetch("/send_emails", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recipients, cc, bcc, subject, body }),
+        })
+          .then((response) => response.json())
+          .then((data) => alert(data.message))
+          .catch((error) => console.error("Error:", error));
+      }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

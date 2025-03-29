@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Filter Data</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        background-color: #000; /* Black background */
+        color: #fff; /* White text */
+        font-family: Arial, sans-serif;
+      }
+
+      /* Sidebar styling */
+      .sidebar {
+        width: 250px; /* Fixed width for sidebar */
+        height: 100vh; /* Full height */
+        background-color: #111; /* Darker black for sidebar */
+        padding: 20px;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+        position: fixed; /* Fixed sidebar */
+      }
+
+      .sidebar a {
+        color: #fff; /* White text for links */
+        text-decoration: none;
+        display: block;
+        margin: 15px 0;
+        font-size: 18px;
+      }
+
+      .sidebar a:hover {
+        color: #ccc; /* Light gray on hover */
+      }
+
+      /* Main content area */
+      .main-content {
+        margin-left: 250px; /* Offset by sidebar width */
+        padding: 20px;
+        flex-grow: 1;
+      }
+
+      /* Filter section styling */
+      .filter-section {
+        margin-bottom: 20px;
+      }
+
+      .filter-section input,
+      .filter-section select,
+      .filter-section button {
+        background-color: #333; /* Dark gray for inputs */
+        color: #fff; /* White text */
+        border: 1px solid #555; /* Light gray border */
+        padding: 10px;
+        margin-right: 10px;
+        border-radius: 5px;
+      }
+
+      .filter-section button {
+        background-color: #555; /* Gray for buttons */
+        cursor: pointer;
+      }
+
+      .filter-section button:hover {
+        background-color: #777; /* Light gray on hover */
+      }
+
+      /* Grid layout for data */
+      .data-grid {
+        display: grid;
+        grid-template-columns: repeat(
+          auto-fill,
+          minmax(300px, 1fr)
+        ); /* Responsive grid */
+        gap: 20px; /* Space between grid items */
+      }
+
+      .data-item {
+        background-color: #222; /* Dark gray for grid items */
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      }
+
+      .data-item p {
+        margin: 5px 0;
+        color: #fff; /* White text */
+      }
+
+      .data-item p strong {
+        color: #ccc; /* Light gray for labels */
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <h3>Menu</h3>
+      <a href="/">Home</a>
+      <a href="/profile">Profile</a>
+      <a href="/scrap">Scrap Data</a>
+      <a href="/view_data">View Data</a>
+      <a href="/logout">Logout</a>
+    </div>
+
+    <!-- Main content -->
+    <div class="main-content">
+      <h1>Filter Data</h1>
+      <div class="filter-section">
+        <h3>Filters</h3>
+        <input type="text" id="searchQuery" placeholder="Enter search term" />
+        <select id="sortColumn">
+          <option value="url">URL</option>
+          <option value="emails">Emails</option>
+          <option value="phone_numbers">Phone Numbers</option>
+          <option value="postal_codes">Postal Codes</option>
+          <option value="locations">Locations</option>
+          <option value="person_names">Person Names</option>
+          <option value="organization_names">Organization Names</option>
+        </select>
+        <select id="sortOrder">
+          <option value="asc">Ascending</option>
+          <option value="desc">Descending</option>
+        </select>
+        <button onclick="applyFilters()">Apply Filters</button>
+        <button onclick="downloadFilteredData()">Download Filtered Data</button>
+      </div>
+
+      <!-- Data grid -->
+      <div class="data-grid" id="dataGrid">
+        <!-- Data items will be populated here -->
+      </div>
+    </div>
+
+    <script>
+      let currentData = [];
+
+      // Function to apply filters
+      function applyFilters() {
+        const searchQuery = document.getElementById("searchQuery").value;
+        const sortColumn = document.getElementById("sortColumn").value;
+        const sortOrder = document.getElementById("sortOrder").value;
+
+        fetch("/filter_data", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            filters: [
+              "url",
+              "emails",
+              "phone_numbers",
+              "postal_codes",
+              "locations",
+              "person_names",
+              "organization_names",
+            ],
+            query: searchQuery,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            currentData = data;
+            return fetch("/sort_data", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                column: sortColumn,
+                order: sortOrder,
+              }),
+            });
+          })
+          .then((response) => response.json())
+          .then((sortedData) => {
+            currentData = sortedData;
+            renderGrid(sortedData);
+          })
+          .catch((error) => console.error("Error:", error));
+      }
+
+      // Function to render the grid with filtered data
+      function renderGrid(data) {
+        const grid = document.getElementById("dataGrid");
+        grid.innerHTML = "";
+        data.forEach((row) => {
+          const item = document.createElement("div");
+          item.className = "data-item";
+          item.innerHTML = `
+                    <p><strong>URL:</strong> ${row.url || ""}</p>
+                    <p><strong>Emails:</strong> ${row.emails || ""}</p>
+                    <p><strong>Phone Numbers:</strong> ${
+                      row.phone_numbers || ""
+                    }</p>
+                    <p><strong>Postal Codes:</strong> ${
+                      row.postal_codes || ""
+                    }</p>
+                    <p><strong>Locations:</strong> ${row.locations || ""}</p>
+                    <p><strong>Person Names:</strong> ${
+                      row.person_names || ""
+                    }</p>
+                    <p><strong>Organization Names:</strong> ${
+                      row.organization_names || ""
+                    }</p>
+                `;
+          grid.appendChild(item);
+        });
+      }
+
+      // Function to download filtered data as CSV
+      function downloadFilteredData() {
+        const searchQuery = document.getElementById("searchQuery").value;
+        const filters = [
+          "url",
+          "emails",
+          "phone_numbers",
+          "postal_codes",
+          "locations",
+          "person_names",
+          "organization_names",
+        ];
+
+        fetch("/download_filtered", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            filters: filters,
+            query: searchQuery,
+          }),
+        })
+          .then((response) => response.blob())
+          .then((blob) => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "filtered_data.csv";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          })
+          .catch((error) => console.error("Error:", error));
+      }
+
+      // Initial load of data
+      applyFilters();
+    </script>
+  </body>
+</html>

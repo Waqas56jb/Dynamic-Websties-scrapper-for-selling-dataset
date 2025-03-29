@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="welcome-message">
+        <h2>Welcome, {{ user.name }}</h2>
+      </div>
+      <div class="profile-section">
+        <img
+          src="{{ user.profile_photo }}"
+          alt="Profile Photo"
+          class="profile-photo"
+          onclick="showPopup()"
+        />
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="content">
+      <div class="user-details">
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Phone:</strong> {{ user.phone }}</p>
+      </div>
+    </main>
+
+    <!-- Profile Popup -->
+    <div id="profile-popup" class="popup">
+      <div class="popup-content">
+        <h3>Profile Details</h3>
+        <p><strong>Name:</strong> {{ user.name }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Phone:</strong> {{ user.phone }}</p>
+        <p><strong>Bio:</strong> {{ user.bio or 'No bio available' }}</p>
+        <button onclick="hidePopup()">Close</button>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+  </body>
+</html>

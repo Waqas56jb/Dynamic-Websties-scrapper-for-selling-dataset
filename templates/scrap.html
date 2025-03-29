@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Scraper</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Loader circle for cursor */
+      #cursor-loader {
+        width: 15px;
+        height: 15px;
+        border: 2px solid transparent;
+        border-top: 2px solid blue;
+        border-right: 2px solid blue;
+        border-radius: 50%;
+        position: fixed;
+        pointer-events: none;
+        animation: spin 0.6s linear infinite;
+        z-index: 9999;
+        display: none;
+      }
+
+      /* Spin animation for loader */
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Loader styling */
+      #loader {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 9999;
+      }
+
+      #loader img {
+        width: 100px;
+        height: 100px;
+      }
+
+      /* Disable pointer events when loading */
+      .loading {
+        pointer-events: none;
+        opacity: 0.6;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100">
+    <!-- Header -->
+    <header class="bg-black text-white text-center py-5">
+      <h1 class="text-3xl font-bold">Web Scraper</h1>
+      <p class="text-lg">
+        Scrape and extract valuable information from websites
+      </p>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto mt-10 p-5">
+      <!-- Scraping Form -->
+      <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-2xl font-semibold mb-4">Scrape a Website</h2>
+        <form id="scraping-form" class="space-y-4">
+          <div>
+            <label for="url" class="block text-sm font-medium text-gray-700"
+              >Website URL</label
+            >
+            <input
+              type="url"
+              id="url"
+              name="url"
+              class="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+              placeholder="Enter a valid URL (e.g., https://example.com)"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-black text-white py-2 px-4 rounded-md hover:bg-gray-800 transition"
+          >
+            Start Scraping
+          </button>
+        </form>
+      </div>
+
+      <!-- Results Section -->
+      <div id="results" class="mt-8 bg-white shadow-md rounded-lg p-6 hidden">
+        <h2 class="text-2xl font-semibold mb-4">Scraping Results</h2>
+        <div id="results-content" class="space-y-4"></div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="mt-8 flex space-x-4 justify-center">
+        <a
+          href="/download_filtered"
+          class="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700"
+        >
+          Download CSV
+        </a>
+        <a
+          href="/view_data"
+          class="bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-yellow-700"
+        >
+          View Data
+        </a>
+      </div>
+    </main>
+
+    <!-- Loader -->
+    <div id="loader">
+      <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading..." />
+    </div>
+
+    <!-- Cursor Loader -->
+    <div id="cursor-loader"></div>
+
+    <!-- Footer -->
+    <footer class="bg-black text-white text-center py-4 mt-10">
+      <p>&copy; 2025 Web Scraper | All Rights Reserved.</p>
+    </footer>
+
+    <script>
+      // Cursor Loader
+      const cursorLoader = document.getElementById("cursor-loader");
+      document.addEventListener("mousemove", (e) => {
+        cursorLoader.style.left = `${e.pageX}px`;
+        cursorLoader.style.top = `${e.pageY}px`;
+      });
+
+      // Form Submission
+      const scrapingForm = document.getElementById("scraping-form");
+      const resultsSection = document.getElementById("results");
+      const resultsContent = document.getElementById("results-content");
+      const loader = document.getElementById("loader");
+
+      scrapingForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const url = document.getElementById("url").value;
+
+        // Show loader
+        loader.style.display = "block";
+        cursorLoader.style.display = "block";
+        document.body.classList.add("loading");
+
+        try {
+          const response = await fetch("/scrape", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ url }),
+          });
+
+          const data = await response.json();
+          if (response.ok) {
+            resultsContent.innerHTML = `
+              <p class="text-green-600">Scraping completed successfully!</p>
+              <p>${data.message}</p>
+              <pre class="bg-gray-100 p-4 rounded-md">${JSON.stringify(
+                data.scrapedResults,
+                null,
+                2
+              )}</pre>
+            `;
+            resultsSection.classList.remove("hidden");
+          } else {
+            resultsContent.innerHTML = `<p class="text-red-600">Error: ${data.message}</p>`;
+            resultsSection.classList.remove("hidden");
+          }
+        } catch (error) {
+          resultsContent.innerHTML = `<p class="text-red-600">An error occurred: ${error.message}</p>`;
+          resultsSection.classList.remove("hidden");
+        } finally {
+          // Hide loader
+          loader.style.display = "none";
+          cursorLoader.style.display = "none";
+          document.body.classList.remove("loading");
+        }
+      });
+    </script>
+  </body>
+</html>

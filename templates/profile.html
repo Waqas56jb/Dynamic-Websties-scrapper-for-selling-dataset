@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Profile</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <style>
+      /* Global Styles */
+      body {
+        font-family: "Arial", sans-serif;
+        background-color: #f8f9fa;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+
+      /* Profile Container */
+      #profile {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 500px;
+        text-align: center;
+      }
+
+      /* Profile Image */
+      #profileImage {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 20px;
+        border: 3px solid #007bff;
+      }
+
+      /* Form Group */
+      .form-group {
+        margin-bottom: 20px;
+        text-align: left;
+        position: relative;
+      }
+
+      .form-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #333;
+      }
+
+      .form-group input,
+      .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s ease;
+      }
+
+      .form-group input:focus,
+      .form-group textarea:focus {
+        border-color: #007bff;
+        outline: none;
+      }
+
+      .form-group textarea {
+        resize: vertical;
+        height: 100px;
+      }
+
+      /* Edit Icon */
+      .edit-icon {
+        position: absolute;
+        right: 10px;
+        top: 40px;
+        color: #007bff;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      /* File Input */
+      .file-input {
+        display: none;
+      }
+
+      .file-label {
+        display: inline-block;
+        background: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.3s ease;
+      }
+
+      .file-label:hover {
+        background: #0056b3;
+      }
+
+      /* Submit Button */
+      .btn {
+        background: #007bff;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background 0.3s ease;
+        width: 100%;
+      }
+
+      .btn:hover {
+        background: #0056b3;
+      }
+
+      /* Loader */
+      .loader {
+        display: none;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #007bff;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Flash Messages */
+      .flash-messages {
+        margin-bottom: 20px;
+      }
+
+      .flash-messages .error {
+        color: #dc3545;
+        background: #f8d7da;
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+      }
+
+      .flash-messages .success {
+        color: #28a745;
+        background: #d4edda;
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 600px) {
+        #profile {
+          padding: 20px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+          font-size: 12px;
+        }
+
+        .btn {
+          font-size: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="profile">
+      <h1>Edit Profile</h1>
+      <img
+        id="profileImage"
+        src="{{ url_for('static', filename='uploads/' + user.profile_photo) }}"
+        alt="Profile Image"
+      />
+
+      <!-- Flash Messages -->
+      <div class="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %} {% if
+        messages %} {% for category, message in messages %}
+        <div class="{{ category }}">{{ message }}</div>
+        {% endfor %} {% endif %} {% endwith %}
+      </div>
+
+      <form method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
+        <!-- Name Field -->
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value="{{ user.name }}"
+            required
+          />
+          <i
+            class="fas fa-pencil-alt edit-icon"
+            onclick="focusInput('name')"
+          ></i>
+        </div>
+
+        <!-- Email Field -->
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value="{{ user.email }}"
+            required
+          />
+          <i
+            class="fas fa-pencil-alt edit-icon"
+            onclick="focusInput('email')"
+          ></i>
+        </div>
+
+        <!-- Bio Field -->
+        <div class="form-group">
+          <label for="bio">Bio</label>
+          <textarea id="bio" name="bio">
+{{ user.bio if user.bio else '' }}</textarea
+          >
+          <i
+            class="fas fa-pencil-alt edit-icon"
+            onclick="focusInput('bio')"
+          ></i>
+        </div>
+
+        <!-- Profile Photo Field -->
+        <div class="form-group">
+          <label for="profile_photo">Profile Photo</label>
+          <input
+            type="file"
+            id="profile_photo"
+            name="profile_photo"
+            class="file-input"
+          />
+          <label for="profile_photo" class="file-label">Choose File</label>
+        </div>
+
+        <!-- Company Logo Field -->
+        <div class="form-group">
+          <label for="company_logo">Company Logo</label>
+          <input
+            type="file"
+            id="company_logo"
+            name="company_logo"
+            class="file-input"
+          />
+          <label for="company_logo" class="file-label">Choose Logo</label>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn">Update Profile</button>
+        <div class="loader" id="loader"></div>
+      </form>
+    </div>
+
+    <script>
+      // Function to focus on input when edit icon is clicked
+      function focusInput(inputId) {
+        document.getElementById(inputId).focus();
+      }
+
+      // Function to show loader when form is submitted
+      function showLoader() {
+        document.getElementById("loader").style.display = "block";
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <style>
+      /* Global Styles */
+      body {
+        font-family: "Arial", sans-serif;
+        background: #111;
+        color: white;
+        margin: 0;
+        display: flex;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        background: #000;
+        width: 250px;
+        height: 100vh;
+        padding-top: 20px;
+        position: fixed;
+        left: 0;
+        top: 0;
+        transition: 0.3s;
+      }
+
+      .sidebar.collapsed {
+        width: 60px;
+      }
+
+      .sidebar.collapsed .sidebar-content a span {
+        display: none;
+      }
+
+      .sidebar button {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: white;
+        padding: 10px;
+        cursor: pointer;
+        width: 100%;
+        text-align: left;
+      }
+
+      .sidebar-content {
+        margin-top: 20px;
+      }
+
+      .sidebar a {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        text-decoration: none;
+        color: white;
+        font-size: 18px;
+        transition: 0.3s;
+      }
+
+      .sidebar a:hover {
+        background: #222;
+      }
+
+      .sidebar a i {
+        margin-right: 10px;
+      }
+
+      /* Main Content */
+      .main {
+        margin-left: 250px;
+        padding: 20px;
+        flex-grow: 1;
+        transition: 0.3s;
+      }
+
+      .main.collapsed {
+        margin-left: 60px;
+      }
+
+      /* Profile Dropdown */
+      .profile-dropdown {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        background: #000;
+        padding: 15px;
+        border-radius: 5px;
+      }
+
+      .profile-dropdown img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        margin-right: 10px;
+      }
+
+      .profile-dropdown span {
+        font-size: 18px;
+      }
+
+      #dropdown-content {
+        display: none;
+        position: absolute;
+        background: #222;
+        top: 60px;
+        right: 20px;
+        min-width: 150px;
+        border-radius: 5px;
+      }
+
+      #dropdown-content a {
+        display: block;
+        padding: 10px;
+        color: white;
+        text-decoration: none;
+      }
+
+      #dropdown-content a:hover {
+        background: #444;
+      }
+
+      /* Company Logo */
+      .company-logo {
+        position: absolute;
+        top: 20px;
+        left: 270px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .main.collapsed .company-logo {
+        left: 80px;
+      }
+
+      /* User Info Section */
+      .user-info {
+        background: #222;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+
+      .user-info h2 {
+        margin: 10px 0;
+        font-size: 24px;
+      }
+
+      .user-info p {
+        margin: 0;
+        font-size: 16px;
+        color: #ccc;
+        line-height: 1.6;
+      }
+
+      /* Dummy Content */
+      .content {
+        margin-top: 30px;
+      }
+
+      .card {
+        background: #222;
+        padding: 20px;
+        border-radius: 10px;
+        margin: 15px 0;
+        display: flex;
+        align-items: center;
+      }
+
+      .card i {
+        font-size: 24px;
+        margin-right: 15px;
+      }
+
+      .card h3 {
+        margin: 0;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .sidebar {
+          width: 60px;
+        }
+
+        .sidebar .sidebar-content a span {
+          display: none;
+        }
+
+        .main {
+          margin-left: 60px;
+        }
+
+        .company-logo {
+          left: 80px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <button onclick="toggleSidebar()">☰</button>
+      <div class="sidebar-content">
+        <a href="#"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="/scrap"><i class="fas fa-search"></i><span>Scrapping</span></a>
+        <a href="/filter_on_data"
+          ><i class="fas fa-user-tie"></i><span>Client</span></a
+        >
+        <a href="#"><i class="fas fa-user"></i><span>Candidate</span></a>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main" id="main">
+      <!-- Company Logo -->
+      {% if user.company_logo %}
+      <img
+        class="company-logo"
+        src="{{ url_for('static', filename='uploads/' + user.company_logo) }}"
+        alt="Company Logo"
+      />
+      {% else %}
+      <img
+        class="company-logo"
+        src="{{ url_for('static', filename='default_logo.png') }}"
+        alt="Default Logo"
+      />
+      {% endif %}
+
+      <!-- Profile Dropdown -->
+      <div class="profile-dropdown">
+        <img
+          src="{{ url_for('static', filename='uploads/' + user.profile_photo) }}"
+          alt="Profile Photo"
+          onclick="toggleDropdown()"
+        />
+        <span>{{ user.name }}</span>
+        <div id="dropdown-content">
+          <a href="{{ url_for('profile') }}"
+            ><i class="fas fa-user"></i> View Profile</a
+          >
+          <a href="{{ url_for('logout') }}"
+            ><i class="fas fa-sign-out-alt"></i> Logout</a
+          >
+        </div>
+      </div>
+
+      <!-- User Info Section -->
+      <div class="user-info">
+        <h2>{{ user.name }}</h2>
+        <p>{{ user.bio if user.bio else 'No bio available.' }}</p>
+      </div>
+
+      <!-- Dummy Content -->
+      <div class="content">
+        <h2>Dashboard</h2>
+        <div class="card">
+          <i class="fas fa-users"></i>
+          <h3>Clients: 50</h3>
+        </div>
+        <div class="card">
+          <i class="fas fa-user-friends"></i>
+          <h3>Candidates: 120</h3>
+        </div>
+        <div class="card">
+          <i class="fas fa-database"></i>
+          <h3>Scrapped Data: 5000 Entries</h3>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Toggle Sidebar
+      function toggleSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        const main = document.getElementById("main");
+        sidebar.classList.toggle("collapsed");
+        main.classList.toggle("collapsed");
+      }
+
+      // Toggle Dropdown
+      function toggleDropdown() {
+        const dropdown = document.getElementById("dropdown-content");
+        dropdown.style.display =
+          dropdown.style.display === "block" ? "none" : "block";
+      }
+
+      // Close dropdown if clicked outside
+      window.onclick = function (event) {
+        if (!event.target.matches(".profile-dropdown img")) {
+          const dropdown = document.getElementById("dropdown-content");
+          if (dropdown.style.display === "block") {
+            dropdown.style.display = "none";
+          }
+        }
+      };
+    </script>
+  </body>
+</html>
